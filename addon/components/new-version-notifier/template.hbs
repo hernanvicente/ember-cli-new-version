@@ -1,9 +1,19 @@
+<!-- new version notifier -->
 {{#if message}}
-  {{#if hasBlock}}
-    {{yield version lastVersion (action 'reload') (action 'close')}}
-  {{else}}
-    <div class='update-notification col-xs-12 alert alert-warning'>
-      {{message}} {{#if showReload}}<a href="" {{action 'reload'}} class='btn btn-default'>{{reloadButtonText}}</a>{{/if}}
-    </div>
-  {{/if}}
+  <div class="section center">
+    {{#if hasBlock}}
+      {{yield version lastVersion (action 'reload') (action 'close')}}
+    {{else}}
+      <p class="center-align">
+        {{message}}
+      </p>
+      <p> 
+        {{#if showReload}}
+          <a href="#" {{action 'reload'}} class='btn btn-default'>
+            {{reloadButtonText}}
+          </a>
+        {{/if}}
+      </p>
+    {{/if}}
+  </div>
 {{/if}}

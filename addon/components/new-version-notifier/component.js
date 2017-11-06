@@ -4,15 +4,15 @@ import Ember from 'ember';
 import layout from './template';
 
 export default Ember.Component.extend({
-  layout: layout,
-  updateInterval: 60000, // One Minute Default
+  updateInterval: 20000,
   tagName: "div",
   versionFileName: "/VERSION.txt",
   versionFilePath: Ember.computed.alias("versionFileName"),
-  updateMessage:"This application has been updated from version {{oldVersion}} to {{newVersion}}. Please save any work, then refresh browser to see changes.",
   showReload: true,
   showReloadButton: Ember.computed.alias("showReload"),
-  reloadButtonText: "Reload",
+  reloadButtonText: Ember.computed(function(){
+    return this.get('i18n').t('general.actions.reload');
+  }),
   url: Ember.computed('versionFileName', function() {
     var config = Ember.getOwner(this).resolveRegistration('config:environment');
     var versionFileName = this.get('versionFileName');
@@ -45,24 +45,34 @@ export default Ember.Component.extend({
         var newVersion = res && res.trim();
 
         if (currentVersion && newVersion !== currentVersion) {
-          var message = self.get("updateMessage")
-            .replace("{{oldVersion}}",currentVersion)
-            .replace("{{newVersion}}",newVersion);
-
+          var message = self.get('i18n').t('general.messages.newVersion', {oldVersion: currentVersion, newVersion:newVersion});
+          // Notify the user with UI to relaod
           self.setProperties({
             message,
             lastVersion: currentVersion
           });
+          // Reload automatically after notification
+          setTimeout(() => { self.reloadPage() }, self.get('updateInterval') / 2);
         }
 
         self.set('version',newVersion);
-      }).always(function() {
+      }).done(() => {
           self.set('_timeout', setTimeout(function() {
               self.updateVersion();
           }, self.get('updateInterval')));
-      });
+      }).fail(() => {
+        self.set('updateInterval', (self.get('updateInterval') * 2));
+        self.set('_timeout', setTimeout(function() {
+            self.updateVersion();
+        }, self.get('updateInterval')));
+    });
     }, 10);
     self.set('_timeout', t);
+  },
+  reloadPage() {
+    if(typeof window !== 'undefined' && window.location) {
+      window.location.reload();
+    }
   },
   willDestroy() {
     this._super(...arguments);
@@ -70,11 +80,8 @@ export default Ember.Component.extend({
   },
   actions: {
     reload() {
-      if(typeof window !== 'undefined' && window.location) {
-        window.location.reload();
-      }
+      this.reloadPage();
     },
-
     close() {
       this.set('message', undefined);
     }
