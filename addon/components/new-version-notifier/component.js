@@ -9,11 +9,10 @@ export default Ember.Component.extend({
   tagName: "div",
   versionFileName: "/VERSION.txt",
   versionFilePath: Ember.computed.alias("versionFileName"),
+  updateMessage:"This application has been updated from version {{oldVersion}} to {{newVersion}}. Please save any work, then refresh browser to see changes.",
   showReload: true,
   showReloadButton: Ember.computed.alias("showReload"),
-  reloadButtonText: Ember.computed(function(){
-    return this.get('i18n').t('general.actions.reload');
-  }),
+  reloadButtonText: 'Reload',
   url: Ember.computed('versionFileName', function() {
     var config = Ember.getOwner(this).resolveRegistration('config:environment');
     var versionFileName = this.get('versionFileName');
@@ -46,7 +45,9 @@ export default Ember.Component.extend({
         var newVersion = res && res.trim();
 
         if (currentVersion && newVersion !== currentVersion) {
-          var message = self.get('i18n').t('general.messages.newVersion', {oldVersion: currentVersion, newVersion:newVersion});
+          var message = self.get("updateMessage")
+            .replace("{{oldVersion}}",currentVersion)
+            .replace("{{newVersion}}",newVersion);
           // Notify the user with UI to relaod
           self.setProperties({
             message,
